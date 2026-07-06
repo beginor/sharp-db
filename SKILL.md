@@ -13,10 +13,10 @@ A CLI tool for querying databases and inspecting schema metadata. Supports Postg
 Build the tool once before first use:
 
 ```bash
-dotnet build src/SharpDbMcp/SharpDbMcp.csproj
+dotnet build src/SharpDb/SharpDb.csproj
 ```
 
-The binary is at `src/SharpDbMcp/bin/Debug/net10.0/sharp-db` (or `bin/Release/net10.0/sharp-db`).
+The binary is at `src/SharpDb/bin/Debug/net10.0/sharp-db` (or `bin/Release/net10.0/sharp-db`).
 
 ## Commands
 

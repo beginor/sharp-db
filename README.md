@@ -14,10 +14,10 @@ A CLI tool and Claude Code Skill for querying databases (PostgreSQL, MySQL, SQLi
 
 ```bash
 cd /Users/zhang/Developer/dotnet/sharp-db-mcp
-dotnet build src/SharpDbMcp/SharpDbMcp.csproj
+dotnet build src/SharpDb/SharpDb.csproj
 ```
 
-The binary is at `src/SharpDbMcp/bin/Debug/net10.0/sharp-db`.
+The binary is at `src/SharpDb/bin/Debug/net10.0/sharp-db`.
 
 ## Usage
 
@@ -86,7 +86,7 @@ dotnet test
 ### Project structure
 
 ```
-src/SharpDbMcp/
+src/SharpDb/
 ├── Metadata/
 │   ├── IMetadataProvider.cs         # Provider interface
 │   ├── BaseMetadataProvider.cs      # Shared execution logic
@@ -101,7 +101,7 @@ src/SharpDbMcp/
 ├── Program.cs                       # CLI entry point
 └── QueryExecutor.cs                 # SQL execution
 
-test/SharpDbMcpTest/
+test/SharpDbTest/
 └── QueryExecutorTests.cs            # Tests (SQLite in-memory)
 ```
 
