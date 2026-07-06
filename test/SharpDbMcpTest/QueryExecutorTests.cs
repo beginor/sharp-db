@@ -12,6 +12,8 @@ public sealed class QueryExecutorTests {
         var executor = database.CreateExecutor();
 
         var markdown = await executor.ExecuteQueryAsync(
+            database.DbType,
+            database.ConnectionString,
             "select id, name, note from people order by id"
         );
 
@@ -31,6 +33,8 @@ public sealed class QueryExecutorTests {
         var executor = database.CreateExecutor();
 
         var markdown = await executor.ExecuteQueryAsync(
+            database.DbType,
+            database.ConnectionString,
             "select id, name from people where id < 0"
         );
 
@@ -50,6 +54,8 @@ public sealed class QueryExecutorTests {
         var executor = database.CreateExecutor();
 
         var result = await executor.ExecuteQueryAsync(
+            database.DbType,
+            database.ConnectionString,
             "update people set note = 'changed' where id = 1"
         );
 
@@ -61,7 +67,7 @@ public sealed class QueryExecutorTests {
         await using var database = await InMemorySqliteDatabase.CreateAsync();
         var metadata = database.CreateMetadataQueryService();
 
-        var markdown = await metadata.QueryTablesAsync();
+        var markdown = await metadata.QueryTablesAsync(database.DbType, database.ConnectionString);
 
         Assert.That(markdown, Is.EqualTo(
             """
@@ -79,7 +85,11 @@ public sealed class QueryExecutorTests {
         await using var database = await InMemorySqliteDatabase.CreateAsync();
         var metadata = database.CreateMetadataQueryService();
 
-        var markdown = await metadata.QueryTablesAsync("other");
+        var markdown = await metadata.QueryTablesAsync(
+            database.DbType,
+            database.ConnectionString,
+            "other"
+        );
 
         Assert.That(markdown, Is.EqualTo(
             """
@@ -96,7 +106,11 @@ public sealed class QueryExecutorTests {
         await using var database = await InMemorySqliteDatabase.CreateAsync();
         var metadata = database.CreateMetadataQueryService();
 
-        var markdown = await metadata.QueryColumnsAsync("posts");
+        var markdown = await metadata.QueryColumnsAsync(
+            database.DbType,
+            database.ConnectionString,
+            "posts"
+        );
 
         Assert.That(markdown, Is.EqualTo(
             """
@@ -116,6 +130,10 @@ public sealed class QueryExecutorTests {
         private InMemorySqliteDatabase(SqliteConnection connection) {
             this.connection = connection;
         }
+
+        public string DbType => "sqlite";
+
+        public string ConnectionString => connection.ConnectionString;
 
         public static async Task<InMemorySqliteDatabase> CreateAsync() {
             var connection = new SqliteConnection("Data Source=:memory:");
@@ -155,13 +173,11 @@ public sealed class QueryExecutorTests {
         }
 
         public QueryExecutor CreateExecutor() {
-            var options = new DatabaseOptions("sqlite", connection.ConnectionString);
-            return new QueryExecutor(new SharedConnectionFactory(connection), options);
+            return new QueryExecutor(new SharedConnectionFactory(connection));
         }
 
         public MetadataQueryService CreateMetadataQueryService() {
-            var options = new DatabaseOptions("sqlite", connection.ConnectionString);
-            return new MetadataQueryService(new SharedConnectionFactory(connection), options);
+            return new MetadataQueryService(new SharedConnectionFactory(connection));
         }
 
         public async ValueTask DisposeAsync() {
@@ -172,7 +188,7 @@ public sealed class QueryExecutorTests {
 
     private sealed class SharedConnectionFactory(SqliteConnection sharedConnection) : IDbConnectionFactory {
 
-        public System.Data.Common.DbConnection CreateConnection() {
+        public System.Data.Common.DbConnection CreateConnection(DatabaseOptions options) {
             return new NonDisposingSqliteConnection(sharedConnection);
         }
 

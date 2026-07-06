@@ -7,19 +7,19 @@ namespace Beginor.SharpDbMcp;
 
 public interface IDbConnectionFactory {
 
-    DbConnection CreateConnection();
+    DbConnection CreateConnection(DatabaseOptions options);
 
 }
 
-public sealed class DbConnectionFactory(DatabaseOptions options) : IDbConnectionFactory {
+public sealed class DbConnectionFactory : IDbConnectionFactory {
 
-    public DbConnection CreateConnection() {
+    public DbConnection CreateConnection(DatabaseOptions options) {
         return options.Type switch {
             "postgres" or "postgresql" => new NpgsqlConnection(options.ConnectionString),
             "mysql" => new MySqlConnection(options.ConnectionString),
             "sqlite" => new SqliteConnection(options.ConnectionString),
             _ => throw new NotSupportedException(
-                $"Unsupported DB_TYPE '{options.Type}'. Supported values are postgres, mysql, sqlite."
+                $"Unsupported dbType '{options.Type}'. Supported values are postgres, mysql, sqlite."
             )
         };
     }

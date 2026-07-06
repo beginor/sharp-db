@@ -3,14 +3,16 @@ using System.Data.Common;
 namespace Beginor.SharpDbMcp;
 
 public sealed class MetadataQueryService(
-    IDbConnectionFactory connectionFactory,
-    DatabaseOptions options
+    IDbConnectionFactory connectionFactory
 ) {
 
     public Task<string> QueryTablesAsync(
+        string dbType,
+        string connectionString,
         string? schema = null,
         CancellationToken cancellationToken = default
     ) {
+        var options = DatabaseOptions.Create(dbType, connectionString);
         var query = options.Type switch {
             "postgres" or "postgresql" => """
                 with primary_keys as (
@@ -152,10 +154,11 @@ public sealed class MetadataQueryService(
                   and (@schema is null or @schema = '' or @schema = 'main')
                 order by objects.name
                 """,
-            _ => throw UnsupportedDatabaseType()
+            _ => throw UnsupportedDatabaseType(options.Type)
         };
 
         return ExecuteMetadataQueryAsync(
+            options,
             query,
             new Dictionary<string, object?> {
                 ["schema"] = schema
@@ -165,6 +168,8 @@ public sealed class MetadataQueryService(
     }
 
     public Task<string> QueryColumnsAsync(
+        string dbType,
+        string connectionString,
         string tableName,
         string? schema = null,
         CancellationToken cancellationToken = default
@@ -173,6 +178,7 @@ public sealed class MetadataQueryService(
             throw new ArgumentException("Table or view name must not be empty.", nameof(tableName));
         }
 
+        var options = DatabaseOptions.Create(dbType, connectionString);
         var query = options.Type switch {
             "postgres" or "postgresql" => """
                 with primary_key_columns as (
@@ -287,10 +293,11 @@ public sealed class MetadataQueryService(
                 where @schema is null or @schema = '' or @schema = 'main'
                 order by table_info.cid
                 """,
-            _ => throw UnsupportedDatabaseType()
+            _ => throw UnsupportedDatabaseType(options.Type)
         };
 
         return ExecuteMetadataQueryAsync(
+            options,
             query,
             new Dictionary<string, object?> {
                 ["schema"] = schema,
@@ -301,11 +308,12 @@ public sealed class MetadataQueryService(
     }
 
     private async Task<string> ExecuteMetadataQueryAsync(
+        DatabaseOptions options,
         string sql,
         IReadOnlyDictionary<string, object?> parameters,
         CancellationToken cancellationToken
     ) {
-        await using var connection = connectionFactory.CreateConnection();
+        await using var connection = connectionFactory.CreateConnection(options);
         await connection.OpenAsync(cancellationToken);
 
         await using var command = connection.CreateCommand();
@@ -327,9 +335,9 @@ public sealed class MetadataQueryService(
         command.Parameters.Add(parameter);
     }
 
-    private NotSupportedException UnsupportedDatabaseType() {
+    private static NotSupportedException UnsupportedDatabaseType(string dbType) {
         return new NotSupportedException(
-            $"Unsupported DB_TYPE '{options.Type}'. Supported values are postgres, mysql, sqlite."
+            $"Unsupported dbType '{dbType}'. Supported values are postgres, mysql, sqlite."
         );
     }
 

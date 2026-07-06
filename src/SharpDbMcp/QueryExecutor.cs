@@ -4,16 +4,22 @@ using System.Globalization;
 namespace Beginor.SharpDbMcp;
 
 public sealed class QueryExecutor(
-    IDbConnectionFactory connectionFactory,
-    DatabaseOptions options
+    IDbConnectionFactory connectionFactory
 ) {
 
-    public async Task<string> ExecuteQueryAsync(string sql, CancellationToken cancellationToken = default) {
+    public async Task<string> ExecuteQueryAsync(
+        string dbType,
+        string connectionString,
+        string sql,
+        CancellationToken cancellationToken = default
+    ) {
         if (string.IsNullOrWhiteSpace(sql)) {
             throw new ArgumentException("SQL must not be empty.", nameof(sql));
         }
 
-        await using var connection = connectionFactory.CreateConnection();
+        var options = DatabaseOptions.Create(dbType, connectionString);
+
+        await using var connection = connectionFactory.CreateConnection(options);
         await connection.OpenAsync(cancellationToken);
 
         await using var command = connection.CreateCommand();

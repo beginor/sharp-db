@@ -13,7 +13,6 @@ public static class Program {
             options.LogToStandardErrorThreshold = LogLevel.Trace;
         });
 
-        builder.Services.AddSingleton(DatabaseOptions.FromEnvironment());
         builder.Services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
         builder.Services.AddSingleton<QueryExecutor>();
         builder.Services.AddSingleton<MetadataQueryService>();
