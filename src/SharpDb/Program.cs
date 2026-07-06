@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Beginor.SharpDbMcp;
+namespace Beginor.SharpDb;
 
 public static class Program {
 

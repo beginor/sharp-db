@@ -1,4 +1,4 @@
-namespace Beginor.SharpDbMcp;
+namespace Beginor.SharpDb.Metadata;
 
 internal static class MetadataProviderFactory {
 

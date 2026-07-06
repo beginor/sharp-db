@@ -1,4 +1,6 @@
-namespace Beginor.SharpDbMcp;
+using Beginor.SharpDb.Metadata;
+
+namespace Beginor.SharpDb;
 
 public sealed class MetadataQueryService(
     IDbConnectionFactory connectionFactory

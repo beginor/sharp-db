@@ -1,8 +1,0 @@
-<Solution>
-  <Folder Name="/src/">
-    <Project Path="src/SharpDbMcp/SharpDbMcp.csproj" />
-  </Folder>
-  <Folder Name="/test/">
-    <Project Path="test/SharpDbMcpTest/SharpDbMcpTest.csproj" />
-  </Folder>
-</Solution>

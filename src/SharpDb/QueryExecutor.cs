@@ -1,7 +1,6 @@
-using System.Data.Common;
 using System.Globalization;
 
-namespace Beginor.SharpDbMcp;
+namespace Beginor.SharpDb;
 
 public sealed class QueryExecutor(
     IDbConnectionFactory connectionFactory

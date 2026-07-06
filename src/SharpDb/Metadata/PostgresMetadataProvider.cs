@@ -1,12 +1,13 @@
-namespace Beginor.SharpDbMcp;
+namespace Beginor.SharpDb.Metadata;
 
-internal sealed class PostgresMetadataProvider : BaseMetadataProvider {
-
-    public PostgresMetadataProvider(IDbConnectionFactory connectionFactory, DatabaseOptions options)
-        : base(connectionFactory, options) {
-    }
+internal sealed class PostgresMetadataProvider(
+    IDbConnectionFactory connectionFactory,
+    DatabaseOptions options
+)
+    : BaseMetadataProvider(connectionFactory, options) {
 
     protected override string GetTablesQuery() {
+        // language=none
         return """
             with primary_keys as (
                 select key_usage.table_schema,

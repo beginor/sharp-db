@@ -1,12 +1,13 @@
-namespace Beginor.SharpDbMcp;
+namespace Beginor.SharpDb.Metadata;
 
-internal sealed class SqliteMetadataProvider : BaseMetadataProvider {
-
-    public SqliteMetadataProvider(IDbConnectionFactory connectionFactory, DatabaseOptions options)
-        : base(connectionFactory, options) {
-    }
+internal sealed class SqliteMetadataProvider(
+    IDbConnectionFactory connectionFactory,
+    DatabaseOptions options
+)
+    : BaseMetadataProvider(connectionFactory, options) {
 
     protected override string GetTablesQuery() {
+        // language=none
         return """
             select 'main' as table_schema,
                    objects.name as table_name,

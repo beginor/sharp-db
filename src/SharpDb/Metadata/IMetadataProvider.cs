@@ -1,4 +1,4 @@
-namespace Beginor.SharpDbMcp;
+namespace Beginor.SharpDb.Metadata;
 
 /// <summary>
 /// Responsible for metadata queries for a specific database type.

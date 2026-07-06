@@ -1,12 +1,13 @@
-namespace Beginor.SharpDbMcp;
+namespace Beginor.SharpDb.Metadata;
 
-internal sealed class MySQLMetadataProvider : BaseMetadataProvider {
-
-    public MySQLMetadataProvider(IDbConnectionFactory connectionFactory, DatabaseOptions options)
-        : base(connectionFactory, options) {
-    }
+internal sealed class MySQLMetadataProvider(
+    IDbConnectionFactory connectionFactory,
+    DatabaseOptions options
+)
+    : BaseMetadataProvider(connectionFactory, options) {
 
     protected override string GetTablesQuery() {
+        // language=none
         return """
             select tables.table_schema,
                    tables.table_name,

@@ -1,20 +1,14 @@
-using System.Data.Common;
-
-namespace Beginor.SharpDbMcp;
+namespace Beginor.SharpDb.Metadata;
 
 /// <summary>
 /// Shares common logic for connection management, parameter binding,
 /// SQL execution, and result formatting. Subclasses only need to provide SQL queries.
 /// </summary>
-public abstract class BaseMetadataProvider : IMetadataProvider {
-
-    private readonly IDbConnectionFactory _connectionFactory;
-    private readonly DatabaseOptions _options;
-
-    protected BaseMetadataProvider(IDbConnectionFactory connectionFactory, DatabaseOptions options) {
-        _connectionFactory = connectionFactory;
-        _options = options;
-    }
+public abstract class BaseMetadataProvider(
+    IDbConnectionFactory connectionFactory,
+    DatabaseOptions options
+)
+    : IMetadataProvider {
 
     public Task<string> QueryTablesAsync(string? schema, CancellationToken cancellationToken = default) {
         return ExecuteAsync(
@@ -48,12 +42,12 @@ public abstract class BaseMetadataProvider : IMetadataProvider {
         IReadOnlyDictionary<string, object?> parameters,
         CancellationToken cancellationToken
     ) {
-        await using var connection = _connectionFactory.CreateConnection(_options);
+        await using var connection = connectionFactory.CreateConnection(options);
         await connection.OpenAsync(cancellationToken);
 
         await using var command = connection.CreateCommand();
         command.CommandText = sql;
-        command.CommandTimeout = _options.CommandTimeoutSeconds;
+        command.CommandTimeout = options.CommandTimeoutSeconds;
 
         foreach (var parameter in parameters) {
             var p = command.CreateParameter();

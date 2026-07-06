@@ -2,7 +2,7 @@ using System.Data.Common;
 using System.Globalization;
 using System.Text;
 
-namespace Beginor.SharpDbMcp;
+namespace Beginor.SharpDb;
 
 public static class MarkdownTableFormatter {
 

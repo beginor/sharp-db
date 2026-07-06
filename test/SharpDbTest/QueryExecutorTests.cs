@@ -1,8 +1,9 @@
-using Beginor.SharpDbMcp;
-using Microsoft.Data.Sqlite;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.Data.Sqlite;
 
-namespace Beginor.SharpDbMcpTest;
+using Beginor.SharpDb;
+
+namespace Beginor.SharpDbTest;
 
 public sealed class QueryExecutorTests {
 
@@ -14,6 +15,7 @@ public sealed class QueryExecutorTests {
         var markdown = await executor.ExecuteQueryAsync(
             database.DbType,
             database.ConnectionString,
+            // language=none
             "select id, name, note from people order by id"
         );
 
@@ -35,6 +37,7 @@ public sealed class QueryExecutorTests {
         var markdown = await executor.ExecuteQueryAsync(
             database.DbType,
             database.ConnectionString,
+            // language=none
             "select id, name from people where id < 0"
         );
 
@@ -56,6 +59,7 @@ public sealed class QueryExecutorTests {
         var result = await executor.ExecuteQueryAsync(
             database.DbType,
             database.ConnectionString,
+            // language=none
             "update people set note = 'changed' where id = 1"
         );
 

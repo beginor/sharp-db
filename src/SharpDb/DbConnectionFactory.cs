@@ -3,7 +3,7 @@ using Microsoft.Data.Sqlite;
 using MySql.Data.MySqlClient;
 using Npgsql;
 
-namespace Beginor.SharpDbMcp;
+namespace Beginor.SharpDb;
 
 public interface IDbConnectionFactory {
 

@@ -6,7 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <RootNamespace>Beginor.SharpDbMcpTest</RootNamespace>
+    <RootNamespace>Beginor.SharpDbTest</RootNamespace>
+    <AssemblyName>SharpDbTest</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\SharpDbMcp\SharpDbMcp.csproj" />
+    <ProjectReference Include="..\..\src\SharpDb\SharpDb.csproj" />
   </ItemGroup>
 
   <ItemGroup>

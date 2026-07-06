@@ -1,4 +1,4 @@
-namespace Beginor.SharpDbMcp;
+namespace Beginor.SharpDb;
 
 public sealed record DatabaseOptions(
     string Type,
