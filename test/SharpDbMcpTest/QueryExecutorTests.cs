@@ -56,6 +56,59 @@ public sealed class QueryExecutorTests {
         Assert.That(result, Is.EqualTo("Rows affected: 1"));
     }
 
+    [Test]
+    public async Task QueryTablesAsync_ReturnsTablesAndViews() {
+        await using var database = await InMemorySqliteDatabase.CreateAsync();
+        var metadata = database.CreateMetadataQueryService();
+
+        var markdown = await metadata.QueryTablesAsync();
+
+        Assert.That(markdown, Is.EqualTo(
+            """
+            | table_schema | table_name | table_type | table_description | primary_key_columns | foreign_keys | related_objects |
+            | --- | --- | --- | --- | --- | --- | --- |
+            | main | active_people | VIEW | NULL | NULL | NULL | NULL |
+            | main | people | BASE TABLE | NULL | id | NULL | NULL |
+            | main | posts | BASE TABLE | NULL | id | person_id -> main.people(id) | main.people |
+            """
+        ));
+    }
+
+    [Test]
+    public async Task QueryTablesAsync_FiltersUnsupportedSqliteSchemaToNoRows() {
+        await using var database = await InMemorySqliteDatabase.CreateAsync();
+        var metadata = database.CreateMetadataQueryService();
+
+        var markdown = await metadata.QueryTablesAsync("other");
+
+        Assert.That(markdown, Is.EqualTo(
+            """
+            | table_schema | table_name | table_type | table_description | primary_key_columns | foreign_keys | related_objects |
+            | --- | --- | --- | --- | --- | --- | --- |
+
+            _No rows returned._
+            """
+        ));
+    }
+
+    [Test]
+    public async Task QueryColumnsAsync_ReturnsTableColumns() {
+        await using var database = await InMemorySqliteDatabase.CreateAsync();
+        var metadata = database.CreateMetadataQueryService();
+
+        var markdown = await metadata.QueryColumnsAsync("posts");
+
+        Assert.That(markdown, Is.EqualTo(
+            """
+            | table_schema | table_name | column_name | ordinal_position | data_type | is_nullable | column_default | column_description | is_primary_key | is_foreign_key | referenced_table_schema | referenced_table_name | referenced_column_name |
+            | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+            | main | posts | id | 1 | INTEGER | NO | NULL | NULL | YES | NO | NULL | NULL | NULL |
+            | main | posts | person_id | 2 | INTEGER | NO | NULL | NULL | NO | YES | main | people | id |
+            | main | posts | title | 3 | TEXT | NO | NULL | NULL | NO | NO | NULL | NULL | NULL |
+            """
+        ));
+    }
+
     private sealed class InMemorySqliteDatabase : IAsyncDisposable {
 
         private readonly SqliteConnection connection;
@@ -76,9 +129,25 @@ public sealed class QueryExecutorTests {
                     note text null
                 );
 
+                create table posts (
+                    id integer not null primary key,
+                    person_id integer not null,
+                    title text not null,
+                    foreign key (person_id) references people (id)
+                );
+
                 insert into people (id, name, note) values
                     (1, 'Ada', 'first'),
                     (2, 'Grace | Hopper', null);
+
+                insert into posts (id, person_id, title) values
+                    (1, 1, 'Computing notes'),
+                    (2, 2, 'Compiler notes');
+
+                create view active_people as
+                select id, name
+                from people
+                where note is not null;
                 """;
             await command.ExecuteNonQueryAsync();
 
@@ -88,6 +157,11 @@ public sealed class QueryExecutorTests {
         public QueryExecutor CreateExecutor() {
             var options = new DatabaseOptions("sqlite", connection.ConnectionString);
             return new QueryExecutor(new SharedConnectionFactory(connection), options);
+        }
+
+        public MetadataQueryService CreateMetadataQueryService() {
+            var options = new DatabaseOptions("sqlite", connection.ConnectionString);
+            return new MetadataQueryService(new SharedConnectionFactory(connection), options);
         }
 
         public async ValueTask DisposeAsync() {

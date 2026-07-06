@@ -16,6 +16,7 @@ public static class Program {
         builder.Services.AddSingleton(DatabaseOptions.FromEnvironment());
         builder.Services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
         builder.Services.AddSingleton<QueryExecutor>();
+        builder.Services.AddSingleton<MetadataQueryService>();
 
         builder.Services
             .AddMcpServer(options => {

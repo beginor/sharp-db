@@ -3,6 +3,8 @@
 一个支持多种数据库的 MCP 服务器，具有如下工具：
 
 - `ExecuteQuery(sql)` 执行 SQL 语句， 以 markdown 表格的形式返回结果；
+- `QueryTables(schema)` 返回数据库中的表和视图及其描述、主键、外键和关联对象信息；如果数据库支持 schema，可以通过 `schema` 进行过滤；
+- `QueryColumns(tableName, schema)` 返回数据库表/视图中的数据列及其描述、主键、外键和关联列信息；如果数据库支持 schema，可以同时传入 `schema` 和 `tableName`，否则只需要传入 `tableName`；
 
 ## 命令行 stdio 模式
 
