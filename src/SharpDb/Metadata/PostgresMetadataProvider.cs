@@ -3,8 +3,7 @@ namespace Beginor.SharpDb.Metadata;
 internal sealed class PostgresMetadataProvider(
     IDbConnectionFactory connectionFactory,
     DatabaseOptions options
-)
-    : BaseMetadataProvider(connectionFactory, options) {
+) : BaseMetadataProvider(connectionFactory, options) {
 
     protected override string GetTablesQuery() {
         // language=none

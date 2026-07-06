@@ -7,8 +7,7 @@ namespace Beginor.SharpDb.Metadata;
 public abstract class BaseMetadataProvider(
     IDbConnectionFactory connectionFactory,
     DatabaseOptions options
-)
-    : IMetadataProvider {
+) : IMetadataProvider {
 
     public Task<string> QueryTablesAsync(string? schema, CancellationToken cancellationToken = default) {
         return ExecuteAsync(
