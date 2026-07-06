@@ -55,6 +55,7 @@ internal sealed class SqliteMetadataProvider(
                    table_info.cid + 1 as ordinal_position,
                    table_info.type as data_type,
                    case
+                       when table_info.pk > 0 then 'NO'
                        when table_info."notnull" = 0 then 'YES'
                        else 'NO'
                    end as is_nullable,

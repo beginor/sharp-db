@@ -10,44 +10,57 @@ internal sealed class PostgresMetadataProvider(
         // language=none
         return """
             with primary_keys as (
-                select key_usage.table_schema,
-                       key_usage.table_name,
-                       string_agg(key_usage.column_name, ', ' order by key_usage.ordinal_position) as primary_key_columns
-                from information_schema.table_constraints constraints
-                join information_schema.key_column_usage key_usage
-                  on key_usage.constraint_schema = constraints.constraint_schema
-                 and key_usage.constraint_name = constraints.constraint_name
-                 and key_usage.table_schema = constraints.table_schema
-                 and key_usage.table_name = constraints.table_name
-                where constraints.constraint_type = 'PRIMARY KEY'
-                group by key_usage.table_schema, key_usage.table_name
+                select child_namespaces.nspname as table_schema,
+                       child_classes.relname as table_name,
+                       string_agg(child_attributes.attname, ', ' order by keys.ordinal_position) as primary_key_columns
+                from pg_constraint constraints
+                join pg_class child_classes
+                  on child_classes.oid = constraints.conrelid
+                join pg_namespace child_namespaces
+                  on child_namespaces.oid = child_classes.relnamespace
+                join unnest(constraints.conkey) with ordinality as keys(attribute_number, ordinal_position)
+                  on true
+                join pg_attribute child_attributes
+                  on child_attributes.attrelid = child_classes.oid
+                 and child_attributes.attnum = keys.attribute_number
+                where constraints.contype = 'p'
+                group by child_namespaces.nspname, child_classes.relname
             ),
             foreign_keys as (
-                select key_usage.table_schema,
-                       key_usage.table_name,
+                select child_namespaces.nspname as table_schema,
+                       child_classes.relname as table_name,
                        string_agg(
-                           key_usage.column_name || ' -> ' ||
-                           column_usage.table_schema || '.' ||
-                           column_usage.table_name || '(' ||
-                           column_usage.column_name || ')',
+                           child_attributes.attname || ' -> ' ||
+                           referenced_namespaces.nspname || '.' ||
+                           referenced_classes.relname || '(' ||
+                           referenced_attributes.attname || ')',
                            '; '
-                           order by key_usage.ordinal_position
+                           order by constraints.conname, keys.ordinal_position
                        ) as foreign_keys,
                        string_agg(
-                           distinct column_usage.table_schema || '.' || column_usage.table_name,
+                           distinct referenced_namespaces.nspname || '.' || referenced_classes.relname,
                            ', '
                        ) as related_objects
-                from information_schema.table_constraints constraints
-                join information_schema.key_column_usage key_usage
-                  on key_usage.constraint_schema = constraints.constraint_schema
-                 and key_usage.constraint_name = constraints.constraint_name
-                 and key_usage.table_schema = constraints.table_schema
-                 and key_usage.table_name = constraints.table_name
-                join information_schema.constraint_column_usage column_usage
-                  on column_usage.constraint_schema = constraints.constraint_schema
-                 and column_usage.constraint_name = constraints.constraint_name
-                where constraints.constraint_type = 'FOREIGN KEY'
-                group by key_usage.table_schema, key_usage.table_name
+                from pg_constraint constraints
+                join pg_class child_classes
+                  on child_classes.oid = constraints.conrelid
+                join pg_namespace child_namespaces
+                  on child_namespaces.oid = child_classes.relnamespace
+                join pg_class referenced_classes
+                  on referenced_classes.oid = constraints.confrelid
+                join pg_namespace referenced_namespaces
+                  on referenced_namespaces.oid = referenced_classes.relnamespace
+                join unnest(constraints.conkey, constraints.confkey) with ordinality
+                    as keys(attribute_number, referenced_attribute_number, ordinal_position)
+                  on true
+                join pg_attribute child_attributes
+                  on child_attributes.attrelid = child_classes.oid
+                 and child_attributes.attnum = keys.attribute_number
+                join pg_attribute referenced_attributes
+                  on referenced_attributes.attrelid = referenced_classes.oid
+                 and referenced_attributes.attnum = keys.referenced_attribute_number
+                where constraints.contype = 'f'
+                group by child_namespaces.nspname, child_classes.relname
             )
             select tables.table_schema,
                    tables.table_name,
@@ -78,34 +91,47 @@ internal sealed class PostgresMetadataProvider(
     protected override string GetColumnsQuery() {
         return """
             with primary_key_columns as (
-                select key_usage.table_schema,
-                       key_usage.table_name,
-                       key_usage.column_name
-                from information_schema.table_constraints constraints
-                join information_schema.key_column_usage key_usage
-                  on key_usage.constraint_schema = constraints.constraint_schema
-                 and key_usage.constraint_name = constraints.constraint_name
-                 and key_usage.table_schema = constraints.table_schema
-                 and key_usage.table_name = constraints.table_name
-                where constraints.constraint_type = 'PRIMARY KEY'
+                select child_namespaces.nspname as table_schema,
+                       child_classes.relname as table_name,
+                       child_attributes.attname as column_name
+                from pg_constraint constraints
+                join pg_class child_classes
+                  on child_classes.oid = constraints.conrelid
+                join pg_namespace child_namespaces
+                  on child_namespaces.oid = child_classes.relnamespace
+                join unnest(constraints.conkey) as keys(attribute_number)
+                  on true
+                join pg_attribute child_attributes
+                  on child_attributes.attrelid = child_classes.oid
+                 and child_attributes.attnum = keys.attribute_number
+                where constraints.contype = 'p'
             ),
             foreign_key_columns as (
-                select key_usage.table_schema,
-                       key_usage.table_name,
-                       key_usage.column_name,
-                       column_usage.table_schema as referenced_table_schema,
-                       column_usage.table_name as referenced_table_name,
-                       column_usage.column_name as referenced_column_name
-                from information_schema.table_constraints constraints
-                join information_schema.key_column_usage key_usage
-                  on key_usage.constraint_schema = constraints.constraint_schema
-                 and key_usage.constraint_name = constraints.constraint_name
-                 and key_usage.table_schema = constraints.table_schema
-                 and key_usage.table_name = constraints.table_name
-                join information_schema.constraint_column_usage column_usage
-                  on column_usage.constraint_schema = constraints.constraint_schema
-                 and column_usage.constraint_name = constraints.constraint_name
-                where constraints.constraint_type = 'FOREIGN KEY'
+                select child_namespaces.nspname as table_schema,
+                       child_classes.relname as table_name,
+                       child_attributes.attname as column_name,
+                       referenced_namespaces.nspname as referenced_table_schema,
+                       referenced_classes.relname as referenced_table_name,
+                       referenced_attributes.attname as referenced_column_name
+                from pg_constraint constraints
+                join pg_class child_classes
+                  on child_classes.oid = constraints.conrelid
+                join pg_namespace child_namespaces
+                  on child_namespaces.oid = child_classes.relnamespace
+                join pg_class referenced_classes
+                  on referenced_classes.oid = constraints.confrelid
+                join pg_namespace referenced_namespaces
+                  on referenced_namespaces.oid = referenced_classes.relnamespace
+                join unnest(constraints.conkey, constraints.confkey) with ordinality
+                    as keys(attribute_number, referenced_attribute_number, ordinal_position)
+                  on true
+                join pg_attribute child_attributes
+                  on child_attributes.attrelid = child_classes.oid
+                 and child_attributes.attnum = keys.attribute_number
+                join pg_attribute referenced_attributes
+                  on referenced_attributes.attrelid = referenced_classes.oid
+                 and referenced_attributes.attnum = keys.referenced_attribute_number
+                where constraints.contype = 'f'
             )
             select columns.table_schema,
                    columns.table_name,

@@ -63,6 +63,8 @@ public static class Program {
     }
 
     private static async Task<int> RunQueryAsync(string[] args) {
+        ValidateOptions(args, "--db-type", "--connection", "--sql");
+
         var dbType = Require(args, "--db-type");
         var connStr = Require(args, "--connection");
         var sql = Require(args, "--sql");
@@ -74,6 +76,8 @@ public static class Program {
     }
 
     private static async Task<int> RunTablesAsync(string[] args) {
+        ValidateOptions(args, "--db-type", "--connection", "--schema");
+
         var dbType = Require(args, "--db-type");
         var connStr = Require(args, "--connection");
         var schema = Optional(args, "--schema");
@@ -85,6 +89,8 @@ public static class Program {
     }
 
     private static async Task<int> RunColumnsAsync(string[] args) {
+        ValidateOptions(args, "--db-type", "--connection", "--table", "--schema");
+
         var dbType = Require(args, "--db-type");
         var connStr = Require(args, "--connection");
         var tableName = Require(args, "--table");
@@ -98,17 +104,52 @@ public static class Program {
 
     private static string Require(string[] args, string flag) {
         for (var i = 0; i < args.Length - 1; i++) {
-            if (args[i] == flag) return args[i + 1];
+            if (args[i] == flag) {
+                var value = args[i + 1];
+                if (IsFlag(value)) {
+                    throw new ArgumentException($"Missing value for argument: {flag}");
+                }
+                return value;
+            }
         }
         throw new ArgumentException($"Missing required argument: {flag}");
     }
 
     private static string? Optional(string[] args, string flag) {
         for (var i = 0; i < args.Length - 1; i++) {
-            if (args[i] == flag) return args[i + 1];
+            if (args[i] == flag) {
+                var value = args[i + 1];
+                if (IsFlag(value)) {
+                    throw new ArgumentException($"Missing value for argument: {flag}");
+                }
+                return value;
+            }
         }
         return null;
     }
+
+    private static void ValidateOptions(string[] args, params string[] allowedFlags) {
+        var allowed = new HashSet<string>(allowedFlags, StringComparer.Ordinal);
+        for (var i = 0; i < args.Length; i++) {
+            var arg = args[i];
+            if (!IsFlag(arg)) {
+                throw new ArgumentException($"Unexpected positional argument: {arg}");
+            }
+
+            if (!allowed.Contains(arg)) {
+                throw new ArgumentException($"Unknown argument: {arg}");
+            }
+
+            if (i == args.Length - 1 || IsFlag(args[i + 1])) {
+                throw new ArgumentException($"Missing value for argument: {arg}");
+            }
+
+            i++;
+        }
+    }
+
+    private static bool IsFlag(string value) =>
+        value.StartsWith("--", StringComparison.Ordinal);
 
     private static QueryExecutor CreateExecutor() =>
         new(new DbConnectionFactory());

@@ -127,6 +127,63 @@ public sealed class QueryExecutorTests {
         ));
     }
 
+    [Test]
+    public async Task QueryColumnsAsync_TreatsSqlitePrimaryKeyAsNotNullable() {
+        await using var database = await InMemorySqliteDatabase.CreateAsync();
+        var executor = database.CreateExecutor();
+        var metadata = database.CreateMetadataQueryService();
+
+        await executor.ExecuteQueryAsync(
+            database.DbType,
+            database.ConnectionString,
+            // language=none
+            "create table implicit_ids (id integer primary key, label text null)"
+        );
+
+        var markdown = await metadata.QueryColumnsAsync(
+            database.DbType,
+            database.ConnectionString,
+            "implicit_ids"
+        );
+
+        Assert.That(markdown, Is.EqualTo(
+            """
+            | table_schema | table_name | column_name | ordinal_position | data_type | is_nullable | column_default | column_description | is_primary_key | is_foreign_key | referenced_table_schema | referenced_table_name | referenced_column_name |
+            | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+            | main | implicit_ids | id | 1 | INTEGER | NO | NULL | NULL | YES | NO | NULL | NULL | NULL |
+            | main | implicit_ids | label | 2 | TEXT | YES | NULL | NULL | NO | NO | NULL | NULL | NULL |
+            """
+        ));
+    }
+
+    [Test]
+    public async Task Main_ReturnsHelpfulErrorForMissingOptionValue() {
+        var (exitCode, error) = await RunProgramAsync("query", "--db-type", "--connection", "Data Source=:memory:", "--sql", "select 1");
+
+        Assert.Multiple(() => {
+            Assert.That(exitCode, Is.EqualTo(1));
+            Assert.That(error, Does.Contain("Missing value for argument: --db-type"));
+        });
+    }
+
+    [Test]
+    public async Task Main_ReturnsHelpfulErrorForUnknownOption() {
+        var (exitCode, error) = await RunProgramAsync(
+            "tables",
+            "--db-type",
+            "sqlite",
+            "--connection",
+            "Data Source=:memory:",
+            "--unknown",
+            "value"
+        );
+
+        Assert.Multiple(() => {
+            Assert.That(exitCode, Is.EqualTo(1));
+            Assert.That(error, Does.Contain("Unknown argument: --unknown"));
+        });
+    }
+
     private sealed class InMemorySqliteDatabase : IAsyncDisposable {
 
         private readonly SqliteConnection connection;
@@ -245,6 +302,19 @@ public sealed class QueryExecutorTests {
             return ValueTask.CompletedTask;
         }
 
+    }
+
+    private static async Task<(int ExitCode, string Error)> RunProgramAsync(params string[] args) {
+        var originalError = Console.Error;
+        using var error = new StringWriter();
+
+        try {
+            Console.SetError(error);
+            var exitCode = await Program.Main(args);
+            return (exitCode, error.ToString());
+        } finally {
+            Console.SetError(originalError);
+        }
     }
 
 }
