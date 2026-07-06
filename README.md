@@ -12,8 +12,17 @@ A CLI tool and Claude Code Skill for querying databases (PostgreSQL, MySQL, SQLi
 
 ## Installation
 
+### Install skills
+
 ```bash
-cd /Users/zhang/Developer/dotnet/sharp-db-mcp
+npx skills add beginor/sharp-db-skills
+```
+
+### Source code
+
+
+```bash
+cd sharp-db-mcp
 dotnet build src/SharpDb/SharpDb.csproj
 ```
 
