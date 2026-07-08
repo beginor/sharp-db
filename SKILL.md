@@ -1,5 +1,5 @@
 ---
-name: sharp-db-skills
+name: sharp-db
 description: Query databases (PostgreSQL, MySQL, SQLite) and inspect schema metadata. Use when the user wants to run SQL queries, list tables/views, or inspect table columns against any database. Requires building the project first and the user to provide a database type and connection string.
 tools: Bash, Read, Glob
 ---

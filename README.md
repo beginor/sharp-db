@@ -15,14 +15,15 @@ A CLI tool and Claude Code Skill for querying databases (PostgreSQL, MySQL, SQLi
 ### Install skills
 
 ```bash
-npx skills add beginor/sharp-db-skills
+npx skills add beginor/sharp-db
 ```
 
 ### Source code
 
 
 ```bash
-cd sharp-db-mcp
+git clone https://github.com/beginor/sharp-db
+cd sharp-db
 dotnet build src/SharpDb/SharpDb.csproj
 ```
 
