@@ -13,6 +13,8 @@ A CLI tool for querying databases and inspecting schema metadata. Supports Postg
 Build the tool once before first use:
 
 ```bash
+git clone https://github.com/beginor/sharp-db
+cd sharp-db
 dotnet build src/SharpDb/SharpDb.csproj
 ```
 
