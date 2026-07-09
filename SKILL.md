@@ -21,7 +21,7 @@ if command -v dotnet &>/dev/null; then
   minor=$(echo "$dotnet_version" | cut -d. -f2)
   if [ "$major" -gt 10 ] || { [ "$major" -eq 10 ] && [ "$minor" -ge 0 ]; }; then
     mkdir -p "$SKILL_DIR/bin"
-    dotnet publish "$SKILL_DIR/src/SharpDb/SharpDb.csproj" -c Release --self-contained -r $(dotnet --info 2>/dev/null | grep "RID:" | awk '{print $2}') -p:PublishSingleFile=true -p:DebugType=None -o "$SKILL_DIR/bin" -q
+    dotnet publish "$SKILL_DIR/src/SharpDb/SharpDb.csproj" -c Release --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -o "$SKILL_DIR/bin"
     if [[ "$(uname -s)" == MINGW* ]] || [[ "$(uname -s)" == MSYS* ]]; then
       SHARP_DB="$SKILL_DIR/bin/sharp-db.exe"
     else
